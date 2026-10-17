@@ -1,0 +1,14 @@
+[project]
+name = "nearmiss"
+version = "0.1.0"
+description = "Hazard-perception training generated from your own streets with NVIDIA Cosmos"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = ["openai>=1.50"]
+
+[project.scripts]
+nearmiss = "nearmiss.pack:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

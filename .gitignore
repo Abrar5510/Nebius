@@ -4,3 +4,4 @@ __pycache__/
 footage/
 out/
 .vercel/
+web/packs/dev/

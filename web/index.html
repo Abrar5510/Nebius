@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Near Miss</title>
+  <meta name="description" content="Hazard-perception training generated from your own streets with NVIDIA Cosmos.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+    <section id="home" class="screen">
+      <p class="eyebrow">Hazard perception · generated from real streets</p>
+      <h1>Could you see it<br>coming?</h1>
+      <p class="lede">Every clip starts as real footage of a real street. Then NVIDIA Cosmos imagines what could happen next.
+        Click the moment you see a hazard developing. The earlier you click, the more you score.</p>
+      <div id="packs" class="packs"></div>
+      <details class="how">
+        <summary>How the clips are made</summary>
+        <ol>
+          <li><b>Nemotron 3 Nano Omni</b> reads the street: parked vehicles that hide people, side lanes, who uses this road.</li>
+          <li><b>Nemotron 3 Ultra</b> plans hazards that fit that street and the city's real crash causes, found live with <b>Tavily</b>.</li>
+          <li><b>Cosmos Predict 2.5</b> renders each hazard as a continuation of the real footage, on a Nebius GPU job.</li>
+          <li><b>Cosmos Reason 2</b> watches every render, writes the answer key and throws out anything physically implausible.</li>
+        </ol>
+      </details>
+    </section>
+
+    <section id="brief" class="screen" hidden>
+      <p class="eyebrow" id="brief-count"></p>
+      <h2>Click or press <kbd>space</kbd> when you see a hazard developing.</h2>
+      <p class="lede">A hazard is anything that would make you slow down, steer or stop. You can't pause or rewind. Clicking constantly scores zero.</p>
+      <button class="primary" id="go">Play clip</button>
+    </section>
+
+    <section id="play" class="screen wide" hidden>
+      <div class="stage">
+        <video id="video" playsinline muted preload="auto"></video>
+        <div id="flash" class="flash"></div>
+      </div>
+      <div class="track" id="play-track"></div>
+      <p class="hint">Click anywhere or press <kbd>space</kbd></p>
+    </section>
+
+    <section id="review" class="screen wide" hidden>
+      <div class="review-head">
+        <p class="eyebrow" id="review-count"></p>
+        <div class="score-big"><span id="review-score">0</span><small>/5</small></div>
+      </div>
+      <div class="stage"><video id="review-video" playsinline muted controls preload="auto"></video></div>
+      <div class="track" id="review-track"></div>
+      <div class="legend"><span class="sw clue"></span>first clue <span class="sw tap"></span>your clicks <span class="sw band"></span>scoring window (5 → 1)</div>
+      <h3 id="review-hazard"></h3>
+      <p id="review-text"></p>
+      <p class="why" id="review-why"></p>
+      <button class="primary" id="next">Next clip</button>
+    </section>
+
+    <section id="results" class="screen" hidden>
+      <p class="eyebrow">Your result</p>
+      <div class="score-big"><span id="total">0</span><small id="total-max">/0</small></div>
+      <p class="lede" id="verdict"></p>
+      <ul id="breakdown" class="breakdown"></ul>
+      <div class="coach">
+        <p class="eyebrow">Coach · Nemotron on Nebius Token Factory</p>
+        <p id="coach-text">Thinking about your clicks…</p>
+      </div>
+      <button class="primary" id="again">Try another pack</button>
+    </section>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

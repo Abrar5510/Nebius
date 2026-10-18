@@ -4,6 +4,7 @@
 #   buckets are Nebius Object Storage bucket names/IDs; upload out/cosmos/* to the input bucket first.
 # ponytail: one GPU, samples run sequentially (~80 s each on H100). Shard across jobs if packs get big.
 set -euo pipefail
+[ -f "$(dirname "$0")/../.env" ] && set -a && . "$(dirname "$0")/../.env" && set +a
 : "${HF_TOKEN:?export HF_TOKEN (Hugging Face read token, Cosmos license accepted)}"
 IN=${1:?input bucket}; OUT=${2:?output bucket}
 

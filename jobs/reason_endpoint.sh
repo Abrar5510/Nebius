@@ -2,6 +2,7 @@
 # Deploy Cosmos Reason 2 (8B) as a Nebius Serverless Endpoint with vLLM's OpenAI-compatible server.
 # Afterwards: export COSMOS_REASON_URL=http://<endpoint-ip>:8000  (and COSMOS_REASON_KEY if you set --auth)
 set -euo pipefail
+[ -f "$(dirname "$0")/../.env" ] && set -a && . "$(dirname "$0")/../.env" && set +a
 : "${HF_TOKEN:?export HF_TOKEN (Hugging Face read token, Cosmos license accepted)}"
 
 nebius ai endpoint create \

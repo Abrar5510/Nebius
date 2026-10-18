@@ -9,6 +9,7 @@
 
 import argparse
 import json
+import os
 import shutil
 from pathlib import Path
 
@@ -108,9 +109,47 @@ def build(a):
     print(f"{len(clips)} clips -> {dst}")
 
 
+def load_env(path=ROOT / ".env"):
+    """KEY=value lines from .env, without overriding real environment variables."""
+    if path.exists():
+        for line in path.read_text().splitlines():
+            k, sep, v = line.strip().partition("=")
+            if sep and not k.startswith("#"):
+                os.environ.setdefault(k.strip(), v.strip().strip("'\""))
+
+
+def check(a):
+    """Go/no-go preflight: keys, CLIs, footage, and one live call to each API. Never prints key values."""
+    ok = True
+    for k in ("NEBIUS_API_KEY", "TAVILY_API_KEY", "HF_TOKEN"):
+        print(f"{k:16} {'set' if os.getenv(k) else 'MISSING'}")
+        ok &= bool(os.getenv(k))
+    for cli in ("nebius", "ffmpeg"):
+        print(f"{cli:16} {'found' if shutil.which(cli) else 'MISSING'}")
+        ok &= bool(shutil.which(cli))
+    clips = sorted(p for p in (ROOT / "footage").glob("*") if p.suffix.lower() in (".mp4", ".mov"))
+    print(f"{'footage/':16} {len(clips)} clip(s)" + ("" if clips else "  MISSING"))
+    ok &= bool(clips)
+    if os.getenv("NEBIUS_API_KEY"):
+        from . import models
+        try:
+            print(f"{'token factory':16} ok, ultra={models.model('ultra')}, omni={models.model('nano-omni')}")
+        except BaseException as e:  # model() exits with the catalog on a miss
+            print(f"{'token factory':16} FAILED: {e}"); ok = False
+    if os.getenv("TAVILY_API_KEY"):
+        from . import models
+        try:
+            print(f"{'tavily':16} ok, {len(models.tavily('Karachi road safety', n=1))} result")
+        except Exception as e:
+            print(f"{'tavily':16} FAILED: {e}"); ok = False
+    raise SystemExit(0 if ok else 1)
+
+
 def main():
+    load_env()
     p = argparse.ArgumentParser(prog="nearmiss", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(required=True)
+    sub.add_parser("check").set_defaults(fn=check)
     s = sub.add_parser("plan"); s.add_argument("footage", nargs="+"); s.add_argument("--city", required=True)
     s.add_argument("-n", type=int, default=3); s.set_defaults(fn=plan)
     s = sub.add_parser("prep"); s.add_argument("footage", nargs="+"); s.add_argument("--start", type=float, default=0)

@@ -172,8 +172,8 @@ Winners must pass identity/role verification and return forms (W-9 / W-8BEN for 
    the app does about it*.
 4. **Wire Token Factory first.** It is OpenAI-compatible:
    `base_url = https://api.tokenfactory.nebius.com/v1/`, `api_key = <your key>`.
-   This repo's `app.py` does this and resolves Nemotron model ids from the live catalog, so ids
-   never go stale. Run `python app.py check` to prove the call works.
+   This repo's `showitonce/clients` does this and resolves Nemotron model ids from the live catalog, so ids
+   never go stale. Run `showitonce check` to prove the API call works.
 5. **Tier your models:** Nano/Super for fast, frequent calls; Ultra for the hard reasoning step.
    Say so in the README and video.
 6. **Optional extras that score:** Tavily runtime call (bonus prize), Nebius Serverless

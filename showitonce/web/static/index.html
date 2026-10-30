@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08090b">
+  <title>Show It Once — one video, any robot</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <div>
+          <div class="brand-name">SHOW IT ONCE</div>
+          <div class="brand-sub">physical AI · track 4</div>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Primary">
+        <button class="nav-item is-active" data-view="runs">
+          <span class="nav-index">01</span> Runs
+        </button>
+        <button class="nav-item" data-view="library">
+          <span class="nav-index">02</span> Skill library
+        </button>
+        <button class="nav-item" data-view="system">
+          <span class="nav-index">03</span> System
+        </button>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="stack-line"><span class="dot"></span><span id="mode-label">mock mode</span></div>
+        <p>Nebius Token Factory<br>Cosmos · GR00T · Isaac</p>
+        <div class="version">v0.1 · phase 1</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="breadcrumb">
+          <span class="crumb-mono">WORKSPACE</span>
+          <span class="slash">/</span>
+          <span id="crumb-current">RUNS</span>
+        </div>
+        <div class="top-actions">
+          <span class="health-pill" id="health-pill"><span class="pulse"></span> connecting</span>
+          <button class="button button-quiet" id="refresh-button">Refresh</button>
+          <button class="button button-primary" id="demo-button">
+            New capture <span class="arrow">↗</span>
+          </button>
+        </div>
+      </header>
+
+      <section class="view" id="view-runs">
+        <div class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow"><span class="eyebrow-line"></span>Film once. Learn everywhere.</p>
+            <h1>One video.<br><em>Any robot.</em></h1>
+            <p class="hero-lede">
+              A phone shows the task once. The pipeline rebuilds your room,
+              extracts the motion, verifies it in simulation, then grows one demo
+              into thousands of training runs.
+            </p>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <div class="hero-stat-value" id="hero-jobs">00</div>
+              <div class="hero-stat-label">captures compiled</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-value" id="hero-skills">00</div>
+              <div class="hero-stat-label">skills published</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-value">10</div>
+              <div class="hero-stat-label">stages · one DAG</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="workspace">
+          <section class="panel run-panel" aria-live="polite">
+            <div class="panel-head">
+              <div>
+                <div class="panel-kicker">ACTIVE RUN</div>
+                <h2 id="job-title">No run selected</h2>
+                <p class="panel-sub" id="job-meta">Start a synthetic capture to see the whole pipeline move.</p>
+              </div>
+              <div class="job-state" id="job-state">
+                <span class="status-dot"></span><span>idle</span>
+              </div>
+            </div>
+
+            <div class="progress-wrap" id="progress-wrap">
+              <div class="progress-label"><span id="progress-text">0 of 10 stages</span><span id="progress-pct">0%</span></div>
+              <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+            </div>
+
+            <div class="stage-list" id="stage-list">
+              <div class="empty-state">
+                <div class="empty-glyph">⌁</div>
+                <h3>Watch a skill assemble itself</h3>
+                <p>Each box is a real stage in the build plan, from understanding the narration to publishing a LoRA.</p>
+                <button class="button button-primary" data-action="demo">Run the cup demo <span class="arrow">↗</span></button>
+              </div>
+            </div>
+
+            <div class="run-foot">
+              <button class="button button-quiet" id="run-again" disabled>Run again</button>
+              <select id="job-picker" class="select" aria-label="Recent runs"></select>
+              <span class="run-id" id="run-id"></span>
+            </div>
+          </section>
+
+          <aside class="insight-column">
+            <section class="panel metric-panel">
+              <div class="panel-kicker">WHAT THE SYSTEM SAW</div>
+              <div class="metric-grid">
+                <div class="metric">
+                  <span class="metric-value" id="metric-objects">—</span>
+                  <span class="metric-label">objects tracked</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-value" id="metric-frames">—</span>
+                  <span class="metric-label">RGB-D frames</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-value" id="metric-clips">—</span>
+                  <span class="metric-label">training clips</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-value" id="metric-success">—</span>
+                  <span class="metric-label">held-out pose</span>
+                </div>
+              </div>
+              <div class="metric-foot">
+                <span id="metric-robot">robot: —</span>
+                <span id="metric-verification">verify: —</span>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head compact">
+                <div>
+                  <div class="panel-kicker">ABLATION</div>
+                  <h3>Every data source must earn its place</h3>
+                </div>
+              </div>
+              <div class="ablation" id="ablation">
+                <p class="muted">The evaluation stage will fill this table. Held-out axes: pose, instance, lighting, scene.</p>
+              </div>
+            </section>
+
+            <section class="panel safety-panel">
+              <div class="panel-kicker">SAFETY GATE</div>
+              <ul class="safety-list" id="safety-list">
+                <li><span class="check">□</span> motion envelope</li>
+                <li><span class="check">□</span> Cosmos monitor</li>
+                <li><span class="check">□</span> twin dry run</li>
+                <li><span class="check">□</span> physical e-stop</li>
+              </ul>
+              <p class="muted small" id="safety-note">Nothing moves until the twin replay passes.</p>
+            </section>
+          </aside>
+        </div>
+
+        <section class="panel event-panel">
+          <div class="panel-head compact">
+            <div>
+              <div class="panel-kicker">EVENT STREAM</div>
+              <h3>Every transition, append-only</h3>
+            </div>
+            <span class="mono muted" id="event-count">0 events</span>
+          </div>
+          <div class="event-list" id="event-list">
+            <p class="muted">The orchestrator writes one event per stage transition. They appear here as the worker runs.</p>
+          </div>
+        </section>
+
+        <section class="library-strip">
+          <div class="section-head">
+            <div>
+              <div class="panel-kicker">SKILL LIBRARY</div>
+              <h2>Teach once. Install anywhere.</h2>
+            </div>
+            <button class="button button-quiet" data-view="library">See all <span class="arrow">↗</span></button>
+          </div>
+          <div class="skill-grid" id="skill-grid-mini">
+            <div class="skill-card ghost"><div class="skill-name">No skills yet</div><p>Finish a run and the package lands here with its spec, demo, LoRA and eval.</p></div>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" id="view-library" hidden>
+        <div class="page-head">
+          <div>
+            <p class="eyebrow"><span class="eyebrow-line"></span>Versioned, private by default</p>
+            <h1>Skill library</h1>
+            <p class="hero-lede">Spec + object-centric demo + per-robot LoRA + evaluation. Raw video never leaves the capture.</p>
+          </div>
+        </div>
+        <div class="skill-grid" id="skill-grid">
+          <div class="skill-card ghost"><div class="skill-name">The library is empty</div><p>Run the cup demo to publish the first skill.</p></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-system" hidden>
+        <div class="page-head">
+          <div>
+            <p class="eyebrow"><span class="eyebrow-line"></span>One DAG, every artifact</p>
+            <h1>System</h1>
+            <p class="hero-lede">Mock mode is deterministic and credential-free. Live mode routes each job to the NVIDIA model that should own it.</p>
+          </div>
+        </div>
+        <div class="system-grid">
+          <section class="panel">
+            <div class="panel-kicker">RUNTIME</div>
+            <dl class="kv" id="system-health"></dl>
+          </section>
+          <section class="panel">
+            <div class="panel-kicker">STAGE DAG</div>
+            <ol class="stage-dag" id="stage-dag"></ol>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+  <aside class="drawer" id="drawer" hidden aria-label="Stage detail">
+    <div class="drawer-head">
+      <div>
+        <div class="panel-kicker" id="drawer-kicker">STAGE</div>
+        <h2 id="drawer-title">Stage</h2>
+      </div>
+      <button class="icon-button" id="drawer-close" aria-label="Close">×</button>
+    </div>
+    <div class="drawer-body" id="drawer-body"></div>
+  </aside>
+
+  <template id="toast-template">
+    <div class="toast"></div>
+  </template>
+  <script src="/static/app.js"></script>
+</body>
+</html>

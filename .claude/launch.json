@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "show-it-once dashboard",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": ["-m", "showitonce", "serve", "--port", "8765"],
+      "port": 8765
+    }
+  ]
+}

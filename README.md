@@ -23,7 +23,7 @@ artifact formats.
 - **Implemented and tested locally:** the full stage DAG, SQLite/Postgres-compatible
   job store, local and S3-compatible artifact storage, orchestrator with retries and an
   append-only event stream, CLI, dashboard, skill versioning, Nebius Serverless Job
-  command builder, and 53 tests.
+  command builder, and 55 tests.
 - **Live adapters written, not exercised in this build:** Parakeet, Cosmos Reason 2 and
   Nebius Token Factory HTTP clients. They fail explicitly when configuration is missing.
 - **Not implemented yet:** the iPhone capture app, GPU reconstruction/tracking jobs,
@@ -148,7 +148,7 @@ showitonce/
   clients/           Parakeet, Cosmos Reason 2, Token Factory HTTP clients
   nebius.py          Serverless Job spec, submit and status
   web/               zero-dependency dashboard + JSON API
-tests/               53 tests across contracts, storage, jobs, DAG and HTTP API
+tests/               55 tests across contracts, storage, jobs, DAG and HTTP API
 docs/BUILD_PLAN.md   the product and build-order source of truth
 ```
 

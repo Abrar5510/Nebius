@@ -14,7 +14,7 @@ from showitonce.artifacts import (
     write_object_demo,
     write_safetensors_stub,
 )
-from showitonce.robots import SO101, get_profile, retarget_trajectory
+from showitonce.robots import FRANKA, SO101, get_profile, retarget_trajectory
 
 TASK_SPEC = {
     "task_name": "place_cup",
@@ -91,3 +91,15 @@ def test_retarget_rejects_bad_input() -> None:
         retarget_trajectory(SO101, np.zeros((1, 3)), np.zeros(1), fps=10)
     with pytest.raises(KeyError, match="available"):
         get_profile("robot-arm-9000")
+
+
+def test_franka_retarget_respects_its_tighter_gripper_limit() -> None:
+    arrays, meta = build_object_centric_demo("cap_1", TASK_SPEC, num_frames=120)
+    target_index = [str(name) for name in arrays["object_names"]].index("red mug")
+    positions = arrays["object_poses"][:, target_index, :3]
+    contacts = arrays["contacts"][:, target_index, 0]
+    joints = retarget_trajectory(FRANKA, positions, contacts, fps=float(meta["fps"]))
+    assert joints.shape == (120, FRANKA.dof)
+    assert np.all(joints >= np.array(FRANKA.lower) - 1e-4)
+    assert np.all(joints <= np.array(FRANKA.upper) + 1e-4)
+    assert joints[-1, FRANKA.gripper_index] >= 0.03

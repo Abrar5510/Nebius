@@ -124,7 +124,11 @@ def retarget_trajectory(
         base = np.concatenate([base, extra], axis=1)
     base = np.clip(base, np.array(profile.lower[: profile.gripper_index]), np.array(profile.upper[: profile.gripper_index]))
     base = np.stack([_smooth(base[:, index]) for index in range(base.shape[1])], axis=1)
-    gripper = finger.reshape(-1, 1)
+    gripper = np.clip(
+        finger.reshape(-1, 1),
+        profile.lower[profile.gripper_index],
+        profile.upper[profile.gripper_index],
+    )
     joints = np.concatenate([base, gripper], axis=1).astype(np.float32)
     assert joints.shape == (num_frames, profile.dof)
     # Enforce a conservative per-frame change; this is the sim-side velocity gate.

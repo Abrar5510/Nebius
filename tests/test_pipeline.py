@@ -140,6 +140,16 @@ def test_pipeline_fails_explicitly_for_unknown_robot(service: Service) -> None:
     assert job.stage("verify").status == "pending"
 
 
+def test_mock_pipeline_supports_franka(service: Service) -> None:
+    capture = seed_demo_capture(service.storage, capture_id="cap_franka")
+    job = service.run_job(service.create_job(capture["capture_id"], robot="franka").id)
+    assert job.status == "succeeded", job.error
+    hdf5_key = job.stage("retarget").output["robot_demo"]
+    with h5py.File(service.storage.local_path(hdf5_key), "r") as handle:
+        assert handle["joint_positions"].shape == (120, 8)
+    assert "lora_franka.safetensors" in job.stage("train").output["lora"]
+
+
 def test_run_job_is_idempotent_for_terminal_jobs(service: Service) -> None:
     capture = seed_demo_capture(service.storage, capture_id="cap_idempotent")
     job = service.run_job(service.create_job(capture["capture_id"]).id)

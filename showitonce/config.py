@@ -10,7 +10,7 @@ import os
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
-VALID_MODES = {"mock", "live", "auto"}
+VALID_MODES = {"mock", "hybrid", "live", "auto"}
 VALID_EXECUTION = {"local", "nebius"}
 
 
@@ -74,9 +74,15 @@ class Settings:
     def resolved_mode(self) -> str:
         if self.mode != "auto":
             return self.mode
-        if self.cosmos_reason_url or self.nebius_api_key:
-            return "live"
+        # Live GPU stages need a real phone capture, so a key alone means hybrid.
+        if self.nebius_api_key:
+            return "hybrid"
         return "mock"
+
+    @property
+    def live_reasoning(self) -> bool:
+        """Token Factory and NVIDIA model calls are real (hybrid or live)."""
+        return self.resolved_mode in {"hybrid", "live"}
 
     @property
     def objects_dir(self) -> Path:

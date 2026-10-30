@@ -168,3 +168,14 @@ def test_artifact_query_must_stay_in_public_prefixes(
     status, payload = running_server.json("/api/artifact?key=private/secret.txt")
     assert status == 403
     assert "outside" in payload["error"]
+
+
+def test_run_on_a_running_job_is_a_conflict(running_server: Client, service: Service) -> None:
+    from showitonce.demo import seed_demo_capture
+
+    capture = seed_demo_capture(service.storage, capture_id="cap_conflict")
+    job = service.create_job(capture["capture_id"], skill="place_cup")
+    assert service.jobs.claim_job(job.id)  # simulate another runner holding it
+    status, payload = running_server.json(f"/api/jobs/{job.id}/run", method="POST", body={})
+    assert status == 409
+    assert payload["job"]["status"] == "running"

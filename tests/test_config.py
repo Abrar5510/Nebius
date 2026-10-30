@@ -7,11 +7,12 @@ import pytest
 from showitonce.config import ConfigError, Settings, load_dotenv
 
 
-def test_auto_mode_picks_live_only_with_credentials(tmp_path: Path) -> None:
+def test_auto_mode_picks_hybrid_only_with_a_token_factory_key(tmp_path: Path) -> None:
     base = Settings(root=tmp_path, mode="auto")
     assert base.resolved_mode == "mock"
-    assert base.with_overrides(nebius_api_key="key").resolved_mode == "live"
-    assert base.with_overrides(cosmos_reason_url="https://cosmos").resolved_mode == "live"
+    assert base.with_overrides(nebius_api_key="key").resolved_mode == "hybrid"
+    assert base.with_overrides(nebius_api_key="key").live_reasoning
+    assert base.with_overrides(cosmos_reason_url="https://cosmos").resolved_mode == "mock"
     assert base.with_overrides(mode="mock", nebius_api_key="key").resolved_mode == "mock"
 
 

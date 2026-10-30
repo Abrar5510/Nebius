@@ -48,8 +48,10 @@ A phone captures a 10-second room scan and one RGB-D video. The pipeline then:
 The current submission is a **Phase 1** implementation: all ten stages run end to end in
 credential-free mock mode and write real NPZ, HDF5, USDA, safetensors, JSON and Markdown
 artifacts. The dashboard shows the live stage timeline, event stream, metrics, ablation
-table and skill library. Live NVIDIA clients and the Nebius Serverless Job seam are
-implemented but not exercised with paid credentials or GPUs in this build.
+table and skill library. In `hybrid` mode the run makes real calls to Nemotron Ultra
+(task compilation) and Nemotron Nano (per-stage status) on Nebius Token Factory. Cosmos,
+Parakeet and the Nebius Serverless Job seam are implemented but not exercised with GPUs
+in this build.
 
 **Who it's for:** a robotics developer or small lab that owns an arm but cannot afford a
 teleoperation lab, and later a home user who wants to teach a household robot by showing

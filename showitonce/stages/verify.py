@@ -1,7 +1,10 @@
 """[E] Verify: replay the retargeted motion against the task predicates.
 
-Mock mode uses the analytic twin checks below. Phase 4 swaps the evaluator for an
-Isaac Lab replay + local trajectory optimizer; the report shape stays the same.
+Mock mode uses the analytic checks below: the task predicates are read from the object
+path extracted in [C], and the arm checks read the retargeted joints from [D]. No robot
+is simulated yet, so these checks cannot catch a grasp the arm would miss. Phase 4 swaps
+the evaluator for an Isaac Lab replay + local trajectory optimizer; the report shape stays
+the same.
 """
 
 from __future__ import annotations
@@ -53,7 +56,11 @@ class VerifyStage(StageHandler):
             "robot": robot_meta["robot"],
             "success": success,
             "verified": success,
-            "engine": "analytic twin checks (mock)",
+            "engine": "analytic checks (mock): object path + joint limits, no physics replay",
+            "scope": (
+                "Task predicates are checked on the demonstrated object path, not on a "
+                "simulated robot. Isaac Lab replay is Phase 4."
+            ),
             "checks": checks,
             "checks_passed": sum(1 for check in checks if check["passed"]),
             "checks_total": len(checks),
@@ -79,8 +86,8 @@ class VerifyStage(StageHandler):
             raise StageError(f"twin verification failed: {failed}")
 
         summary = (
-            f"Analytic twin check (mock): {report['checks_passed']}/{report['checks_total']} "
-            "passed, 0 trajectory repairs needed."
+            f"Analytic check (mock): {report['checks_passed']}/{report['checks_total']} passed "
+            "on the object path and joint limits; no physics replay yet."
         )
         return StageResult(
             output={

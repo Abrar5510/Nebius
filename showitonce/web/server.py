@@ -213,6 +213,9 @@ def make_handler(service: Service, static_dir: Path):
             if job.status == "succeeded":
                 self._send_json({"job": job.to_dict()})
                 return
+            if job.status == "running":
+                self._send_json({"job": job.to_dict()}, HTTPStatus.CONFLICT)
+                return
             service.run_job_async(job_id)
             self._send_json({"job": job.to_dict()}, HTTPStatus.ACCEPTED)
 

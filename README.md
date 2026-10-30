@@ -23,9 +23,12 @@ artifact formats.
 - **Implemented and tested locally:** the full stage DAG, SQLite/Postgres-compatible
   job store, local and S3-compatible artifact storage, orchestrator with retries and an
   append-only event stream, CLI, dashboard, skill versioning, Nebius Serverless Job
-  command builder, and 55 tests.
-- **Live adapters written, not exercised in this build:** Parakeet, Cosmos Reason 2 and
-  Nebius Token Factory HTTP clients. They fail explicitly when configuration is missing.
+  command builder, and 60 tests.
+- **Real Nemotron calls in `hybrid` mode:** with a `NEBIUS_API_KEY`, stage [A] compiles the
+  task spec with Nemotron Ultra on Token Factory and every stage gets a Nemotron Nano status
+  line; the GPU stages stay mock until a real phone capture exists.
+- **Live adapters written, not exercised in this build:** Parakeet and Cosmos Reason 2 HTTP
+  clients. They fail explicitly when configuration is missing.
 - **Not implemented yet:** the iPhone capture app, GPU reconstruction/tracking jobs,
   Isaac Sim replay, real model training, real-robot deployment, and the correction loop.
   Mock mode never pretends otherwise: every synthetic artifact carries `"synthetic": true`.
@@ -148,7 +151,7 @@ showitonce/
   clients/           Parakeet, Cosmos Reason 2, Token Factory HTTP clients
   nebius.py          Serverless Job spec, submit and status
   web/               zero-dependency dashboard + JSON API
-tests/               55 tests across contracts, storage, jobs, DAG and HTTP API
+tests/               60 tests across contracts, storage, jobs, DAG and HTTP API
 docs/BUILD_PLAN.md   the product and build-order source of truth
 ```
 
@@ -174,8 +177,8 @@ The synthetic evaluation numbers are illustrative. They are marked
 
 | Model / service | Code path | Role in the product | This build |
 |---|---|---|---|
-| **Nebius Token Factory — Nemotron Ultra** | `stages/understand.py` | Compile narration + video analysis into a task spec | Live client; not called without a key |
-| **Nebius Token Factory — Nemotron Nano/Super** | `clients.status_line()` | One warm status line per stage | Live client; mock uses the stage summary |
+| **Nebius Token Factory — Nemotron Ultra** | `stages/understand.py` | Compile narration + video analysis into a task spec | Live in `hybrid` and `live` modes |
+| **Nebius Token Factory — Nemotron Nano/Super** | `clients.status_line()` | One warm status line per stage | Live in `hybrid` and `live` modes; mock uses the stage summary |
 | **NVIDIA Parakeet** | `clients/ParakeetClient` | Transcribe the phone narration | Live client |
 | **NVIDIA Cosmos Reason 2** | `clients/CosmosReasonClient` | Video understanding, physics priors, clip filtering, runtime safety monitor | Client + stage boundary; mock emits the same manifests |
 | **NVIDIA Cosmos Predict 2.5 (GR00T-Dreams)** | `stages/multiply.py` | Generate new behaviours and environments | Manifest + counts; GPU generation is future work |
@@ -193,9 +196,9 @@ one-word change because every model is behind one OpenAI-compatible client.
 
 **Where Token Factory accelerated development:** it removes the need to host or tune a
 reasoning model during iteration. The live path resolves Nemotron model IDs from the
-Token Factory catalog at runtime, so no model ID is hard-coded. The current Phase 1
-build does not make a paid live call by default; set a key and `SHOWITONCE_MODE=live`
-to exercise it.
+Token Factory catalog at runtime, so no model ID is hard-coded. The default mock run
+makes no paid call; set `NEBIUS_API_KEY` and run `SHOWITONCE_MODE=hybrid showitonce demo`
+to compile the task with Nemotron Ultra and narrate each stage with Nemotron Nano.
 
 ---
 
@@ -203,11 +206,19 @@ to exercise it.
 
 ```bash
 cp .env.example .env
-# fill in NEBIUS_API_KEY, COSMOS_REASON_URL, PARAKEET_URL, S3 settings
-SHOWITONCE_MODE=live showitonce demo
+# fill in NEBIUS_API_KEY
+SHOWITONCE_MODE=hybrid showitonce check   # prints the resolved Nemotron model ids
+SHOWITONCE_MODE=hybrid showitonce demo    # real Nemotron calls, mock GPU stages
 ```
 
-`auto` mode selects live only when `NEBIUS_API_KEY` or `COSMOS_REASON_URL` is present.
+| Mode | Token Factory / Nemotron | GPU stages ([B]–[H]) |
+|---|---|---|
+| `mock` | not called | synthetic |
+| `hybrid` | Ultra writes the task spec, Nano writes status lines | synthetic, marked `"synthetic": true` |
+| `live` | same, plus Parakeet and Cosmos Reason 2 when configured | real; needs a phone mesh, extractor output and GPU jobs |
+
+`auto` picks `hybrid` when `NEBIUS_API_KEY` is present, otherwise `mock`. Full `live` must
+be chosen explicitly because it fails at [B] without a real phone capture.
 `SHOWITONCE_EXECUTION=nebius` additionally requires `SHOWITONCE_JOB_IMAGE` and
 `NEBIUS_SUBNET_ID`; `showitonce.nebius.NebiusJobs` can build, dry-run, submit and poll
 a stage container. Automatic per-stage cloud dispatch is deliberately not wired into the

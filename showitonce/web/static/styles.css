@@ -377,6 +377,8 @@ h1, h2, h3, p { margin: 0; }
 .dag-desc { color: var(--faint); font-size: 11px; margin-top: 2px; }
 
 /* ------------------------------------------------------------------- drawer */
+/* Author `display` rules beat the UA [hidden] rule; keep hidden elements hidden. */
+[hidden] { display: none !important; }
 .drawer-backdrop {
   position: fixed; inset: 0; z-index: 40;
   background: rgba(0,0,0,.52);

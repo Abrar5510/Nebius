@@ -14,6 +14,9 @@ Legend:
   external extractor; it fails explicitly if the dependency is missing.
 - **Planned** — contract or manifest exists, but the compute/model is not implemented.
 
+Modes: `mock` (no network), `hybrid` (real Nemotron on Token Factory, mock GPU stages),
+`live` (every configured service; needs a real phone capture).
+
 ---
 
 ## Phase matrix
@@ -39,11 +42,11 @@ Legend:
 
 | Stage | Handler | Default (`mock`) | Live (`live`) | Real model / hardware |
 |---|---|---|---|---|
-| [A] Understand | `stages/understand.py` | Deterministic task compiler from capture metadata | Parakeet → Cosmos Reason 2 → Nemotron Ultra | Clients written; not called in this build |
+| [A] Understand | `stages/understand.py` | Deterministic task compiler from capture metadata | Parakeet → Cosmos Reason 2 → Nemotron Ultra | Nemotron Ultra runs in `hybrid` mode; Parakeet/Cosmos clients not called yet |
 | [B] Reconstruct | `stages/reconstruct.py` | USD scene + physics priors | Imports `capture.files.mesh` as USDZ | NuRec/SAM 2 not implemented |
 | [C] Extract | `stages/extract.py` | Synthetic object-centric NPZ | Consumes external FoundationPose/HaMeR NPZ + JSON | GPU extractor not implemented |
 | [D] Retarget | `stages/retarget.py` | Analytic object-path retargeter | Same, with live-derived demo | Isaac Lab IK/optimizer planned |
-| [E] Verify | `stages/verify.py` | Analytic twin checks (success, upright, release, limits) | Same contract | Isaac Lab replay planned |
+| [E] Verify | `stages/verify.py` | Analytic checks on the demonstrated object path (success, upright, release) plus joint speed/limits; no robot is simulated | Same contract | Isaac Lab replay planned |
 | [F] Multiply | `stages/multiply.py` | 2,042-clip manifest (Mimic/Dreams/Transfer/Reason) | Explicit error: GPU generation not implemented | GPU generation planned |
 | [G] Train | `stages/train.py` | Loss curve + valid empty safetensors | Explicit error: no training image/checkpoint | GR00T training not implemented |
 | [H] Evaluate | `stages/evaluate.py` | Synthetic ablation rows | Explicit error: no Isaac Lab-Arena results | Isaac Lab-Arena + real robot planned |
@@ -88,8 +91,9 @@ Legend:
 
 ## Known gaps and honest risks
 
-1. **No paid live call has been made from this repository.** Live clients are implemented
-   but not verified against a real Token Factory, Cosmos or Parakeet endpoint here.
+1. **Only Token Factory is on the live path.** `hybrid` mode calls Nemotron Ultra and Nano;
+   Cosmos Reason 2 and Parakeet clients are implemented but not verified against a real
+   endpoint here.
 2. **No GPU stage has run.** Reconstruction, extraction, Mimic, Dreams, Transfer, GR00T
    training and Isaac evaluation are contracts and boundaries, not working model jobs.
 3. **The demo evaluation table is synthetic.** It demonstrates the product surface; it is

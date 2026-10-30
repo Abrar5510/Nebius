@@ -42,6 +42,8 @@ class Orchestrator:
         job = self.jobs.get_job(job_id)
         if job.status in {"succeeded", "failed", "cancelled"}:
             return job
+        if claim and job.status == "running":
+            raise JobConflict(f"job {job_id} is already running")
         if claim and job.status == "queued":
             if not self.jobs.claim_job(job_id):
                 raise JobConflict(f"job {job_id} is not claimable")
@@ -162,6 +164,8 @@ class Orchestrator:
         def target() -> None:
             try:
                 self.run_job(job_id)
+            except JobConflict:
+                return  # another runner owns it; failing the job would be wrong
             except Exception as exc:  # pragma: no cover - worker boundary
                 try:
                     self.jobs.update_job(job_id, status="failed", error=str(exc))

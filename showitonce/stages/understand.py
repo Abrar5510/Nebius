@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from ..clients import ClientError
+from ..clients import ClientError, ClientNotConfigured
 from ..contracts import (
     TASK_SPEC_SCHEMA,
     ContractError,
@@ -31,7 +31,8 @@ class UnderstandStage(StageHandler):
         video_analysis: dict[str, Any] | None = None
         models: list[str] = []
 
-        if ctx.settings.resolved_mode == "live":
+        live = ctx.settings.live_reasoning
+        if live:
             transcript = self._live_transcript(ctx, capture) or narration
             video_analysis = self._live_video_analysis(ctx)
             spec = self._live_task_spec(ctx, capture, transcript, video_analysis)
@@ -40,7 +41,7 @@ class UnderstandStage(StageHandler):
                 models.append("parakeet")
             if video_analysis:
                 models.append("cosmos-reason-2")
-            models.append("nemotron-ultra")
+            models.append(spec["source"]["reasoning_model"])
         else:
             spec = self._mock_task_spec(capture, transcript)
             models = ["mock"]
@@ -48,7 +49,8 @@ class UnderstandStage(StageHandler):
         try:
             validate_task_spec(spec)
         except ContractError as exc:
-            raise StageError(str(exc)) from exc
+            # A model reply can be retried; the deterministic compiler cannot.
+            raise StageError(str(exc), retryable=live) from exc
 
         understanding = {
             "schema_version": "showitonce.understanding/v1",
@@ -57,7 +59,7 @@ class UnderstandStage(StageHandler):
             "task_spec": spec,
             "models": models,
             "created_at": iso_now(),
-            "synthetic": ctx.settings.resolved_mode != "live",
+            "synthetic": not live,
         }
 
         transcript_key = ctx.put_text("transcript.txt", transcript)
@@ -65,7 +67,7 @@ class UnderstandStage(StageHandler):
         spec_key = ctx.put_json("task_spec.json", spec)
 
         summary = (
-            f'{"Mock-compiled" if ctx.settings.resolved_mode != "live" else "Understood"} '
+            f'{"Understood" if live else "Mock-compiled"} '
             f'"{spec["instruction"]}" as {len(spec["subtasks"])} steps '
             f'with {len(spec["success_predicates"])} success checks.'
         )
@@ -151,16 +153,26 @@ Return exactly one JSON object with these fields:
 Every object referenced by a predicate must also appear in objects.
 """
         try:
-            spec = ctx.clients.token_factory.chat_json(prompt, tier="reason", system=SYSTEM)
+            client = ctx.clients.token_factory
+            spec = client.chat_json(prompt, tier="reason", system=SYSTEM, max_tokens=4000)
+            model = client.reason_model
         except ClientError as exc:
-            raise StageError(f"Nemotron Ultra task spec failed: {exc}", retryable=True) from exc
+            raise StageError(
+                f"Nemotron Ultra task spec failed: {exc}",
+                retryable=not isinstance(exc, ClientNotConfigured),
+            ) from exc
         if spec.get("schema_version") != TASK_SPEC_SCHEMA:
             spec["schema_version"] = TASK_SPEC_SCHEMA
-        spec.setdefault("source", {})
+        objects = [obj for obj in spec.get("objects") or [] if isinstance(obj, dict)]
+        # Downstream stages key the motion on exactly one target object.
+        if objects and not any(obj.get("role") == "target" for obj in objects):
+            objects[0]["role"] = "target"
+        if not isinstance(spec.get("source"), dict):
+            spec["source"] = {}
         spec["source"].update(
             {
                 "transcript": transcript,
-                "reasoning_model": "nemotron-ultra",
+                "reasoning_model": model,
                 "video_model": "cosmos-reason-2" if video_analysis else "none",
             }
         )

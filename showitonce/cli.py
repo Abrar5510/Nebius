@@ -245,8 +245,16 @@ def cmd_check(args: argparse.Namespace) -> int:
     print(f"stages     {len(health['stages'])}: {', '.join(health['stages'])}")
     print(f"captures   {health['captures']}")
     print(f"jobs       {health['jobs']}")
-    if settings.mode == "live":
+    if settings.live_reasoning:
         print(f"token factory  {'configured' if settings.nebius_api_key else 'missing NEBIUS_API_KEY'}")
+        if settings.nebius_api_key:
+            try:
+                client = service.clients.token_factory
+                print(f"  fast model   {client.fast_model}")
+                print(f"  reason model {client.reason_model}")
+            except ClientError as exc:
+                print(f"  model lookup failed: {exc}")
+    if settings.resolved_mode == "live":
         print(f"cosmos reason  {'configured' if settings.cosmos_reason_url else 'missing COSMOS_REASON_URL'}")
         print(f"parakeet       {'configured' if settings.parakeet_url else 'missing PARAKEET_URL'}")
         print(f"object storage {'configured' if settings.s3_bucket else 'missing NEBIUS_S3_BUCKET'}")
@@ -299,7 +307,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("--data-dir", help="override SHOWITONCE_DATA_DIR")
-    parser.add_argument("--mode", choices=["mock", "live", "auto"], help="override SHOWITONCE_MODE")
+    parser.add_argument("--mode", choices=["mock", "hybrid", "live", "auto"], help="override SHOWITONCE_MODE")
     sub = parser.add_subparsers(dest="command", required=True)
 
     demo = sub.add_parser("demo", help="seed a synthetic capture and run the full pipeline")

@@ -167,6 +167,9 @@ function renderStages() {
   const job = state.job;
   const list = $("#stage-list");
   if (!job) {
+    // Rebuilding this every poll swaps the button out from under the cursor.
+    if (state.stageSignature === "empty") return;
+    state.stageSignature = "empty";
     list.innerHTML = `
       <div class="empty-state">
         <div class="empty-glyph">⌁</div>
@@ -536,7 +539,7 @@ async function openSkill(name, version = null) {
       name,
       `<div class="drawer-section"><h3>Instruction</h3><p class="muted">${esc(skill.instruction)}</p></div>
        <div class="drawer-section"><h3>Package</h3><div class="drawer-checks">${files}</div></div>
-       <div class="drawer-section"><h3>Privacy</h3><p class="muted small">Faces blurred at capture. Raw video is not in the package. Only the object-centric demo and LoRA are shared.</p></div>
+       <div class="drawer-section"><h3>Privacy</h3><p class="muted small">Raw video is not in the package. Only the object-centric demo and LoRA are shared.</p></div>
        <div class="drawer-section"><h3>Manifest</h3><pre class="json-view">${esc(JSON.stringify(skill, null, 2))}</pre></div>`
     );
   } catch (error) {

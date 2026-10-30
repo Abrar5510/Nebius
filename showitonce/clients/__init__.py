@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
@@ -68,16 +69,22 @@ def _models_url(base_url: str) -> str:
 
 
 def parse_json_content(content: str) -> dict[str, Any]:
-    """Models occasionally wrap JSON in a markdown fence despite instructions."""
-    text = content.strip()
+    """Models occasionally wrap JSON in a fence, a <think> block or a sentence."""
+    text = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
     if text.startswith("```"):
         text = text.split("\n", 1)[-1]
         if text.rstrip().endswith("```"):
             text = text.rstrip()[:-3]
-    try:
-        value = json.loads(text)
-    except json.JSONDecodeError as exc:
-        raise ClientError(f"model did not return JSON: {content[:500]}") from exc
+    start, end = text.find("{"), text.rfind("}")
+    candidates = [text] + ([text[start : end + 1]] if 0 <= start < end else [])
+    for candidate in candidates:
+        try:
+            value = json.loads(candidate)
+            break
+        except json.JSONDecodeError:
+            continue
+    else:
+        raise ClientError(f"model did not return JSON: {content[:500]}")
     if not isinstance(value, dict):
         raise ClientError("model returned JSON that is not an object")
     return value
@@ -158,8 +165,17 @@ class TokenFactoryClient:
         except (KeyError, IndexError, TypeError) as exc:
             raise ClientError(f"unexpected chat response: {data}") from exc
 
-    def chat_json(self, prompt: str, *, tier: str = "reason", system: str | None = None) -> dict:
-        return parse_json_content(self.chat(prompt, tier=tier, system=system))
+    def chat_json(
+        self,
+        prompt: str,
+        *,
+        tier: str = "reason",
+        system: str | None = None,
+        max_tokens: int = 1200,
+    ) -> dict:
+        return parse_json_content(
+            self.chat(prompt, tier=tier, system=system, max_tokens=max_tokens)
+        )
 
 
 @dataclass
@@ -295,7 +311,7 @@ class Clients:
 
     def status_line(self, stage: str, fallback: str, detail: str = "") -> str:
         """One human-readable line for the app. Nano in live mode, deterministic otherwise."""
-        if self.settings.resolved_mode != "live":
+        if not self.settings.live_reasoning:
             return fallback
         try:
             prompt = (
